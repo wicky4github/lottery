@@ -24,7 +24,7 @@ const prizes = [{
   prize_img: '',
   prize_name: '三等奖',
   can_repeat: 0,
-  is_published: 1,
+  is_published: 0,
   users: [],
 }, {
   prize_id: 2,
@@ -323,7 +323,7 @@ const app = new Vue({
         if (this.IS_OFFLINE) {
           this.createUserInterval = setInterval(() => {
             // 數量比较大用canvas开发，不然会卡
-            if (this.users.length >= 200) {
+            if (this.users.length >= 50) {
               this.stopCreateUser()
               return
             }
