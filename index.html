@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>抽奖</title>
+	<link href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+	<link href="https://cdn.bootcss.com/animate.css/3.7.0/animate.min.css" rel="stylesheet">
+	<link rel="stylesheet" href="index.css">
+	<meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests" />
+</head>
+
+<body>
+	<!-- Loading -->
+	<div class="loading">
+		<div class="loader">
+			<div class="text">Loading...</div>
+			<div class="horizontal">
+			  <div class="circlesup">
+					<div class="circle"></div>
+					<div class="circle"></div>
+					<div class="circle"></div>
+					<div class="circle"></div>
+					<div class="circle"></div>
+			  </div>
+			  <div class="circlesdwn">
+					<div class="circle"></div>
+					<div class="circle"></div>
+					<div class="circle"></div>
+					<div class="circle"></div>
+					<div class="circle"></div>
+			  </div>
+			</div>
+			<div class="vertical">
+			  <div class="circlesup">
+					<div class="circle"></div>
+					<div class="circle"></div>
+					<div class="circle"></div>
+					<div class="circle"></div>
+					<div class="circle"></div>
+			  </div>
+			  <div class="circlesdwn">
+					<div class="circle"></div>
+					<div class="circle"></div>
+					<div class="circle"></div>
+					<div class="circle"></div>
+					<div class="circle"></div>
+			  </div>
+			</div>
+		</div>
+	</div>
+	<!-- 网页容器 -->
+	<div id="app" class="app-stage" @click="closeAllMenu" style="opacity: 0" :style="{opacity: appOpacity}">
+		<!-- 背景 -->
+		<div class="background-stage" :style="{filter:isActivityStarted?'blur(10px)':''}">
+			<img :src="background">
+		</div>
+		<!-- Logo -->
+		<div class="logo-stage animated bounceIn">
+			<img src="./imgs/logo.png">
+		</div>
+		<!-- 标题 -->
+		<div class="app-title">
+			<div class="animated bounceIn">{{activityTitle}}</div>
+		</div>
+		<!-- 弹幕容器 -->
+		<div class="barrage-stage" v-show="showBarrage">
+			<div class="barrage-list">
+				<div class="barrage-item" v-for="(user,index) in users" :style="getBarrageStyle(user)">
+					<img :src="user.headimgurl">
+					<span>{{ user.nickname }}</span>
+				</div>
+			</div>
+		</div>
+		<!-- 抽奖容器 -->
+		<div class="lottery-stage" v-show="isActivityStarted">
+			<div class="lottery-wrapper animated bounceIn">
+				<div class="lottery-left">
+					<div class="lottery-prices">
+						<span>抽取奖项</span>
+						<select v-model="nowPrizeIndex">
+							<option v-for="(prize,index) in prizes" :value="index">{{prize.prize_name}}</option>
+						</select>
+					</div>
+					<div class="lottery-imgs">
+						<div class="lottery-prize-img">
+							<div class="img-wrapper">
+								<img :src="nowPrize.prize_img || giftImg">
+							</div>
+						</div>
+						<div class="lottery-avatar-img">
+							<div class="img-wrapper">
+								<img :src="nowLotteryUser.headimgurl || giftImg">
+								<span v-show="nowLotteryUser.nickname">{{nowLotteryUser.nickname}}</span>
+							</div>
+						</div>
+					</div>
+					<div class="lottry-tools">
+						<div class="lottry-number">
+							<span>一次抽取</span>
+							<input type="number" v-model="lotteryPerTimes" min="1">
+							<span>人</span>
+						</div>
+						<div class="lottry-button">
+							<button class="bubbly-button" type="button" @click="toggoleLottery">{{isLotteryStarted?'停止':'开始抽奖'}}</button>
+						</div>
+					</div>
+				</div>
+				<div class="lottery-right">
+					<div class="lottery-right-container">
+						<div class="lottery-right-title">
+							<span>获奖名单</span>
+							<span v-if="nowPrize && nowPrize.users">({{nowPrize.users.length}})</span>
+						</div>
+						<div class="table-wrapper">
+							<table class="lottery-right-table">
+								<thead>
+									<tr>
+										<th v-show="showRedoLotteryCheckbox">
+											<input type="checkbox" @click.prevent.stop="toggoleChecked" :checked="allRedoLotteryChecked">
+										</th>
+										<th class="order">序号</th>
+										<th>获奖人员</th>
+										<th>奖项</th>
+									</tr>
+								</thead>
+								<tbody v-if="nowPrize && nowPrize.users">
+									<tr v-for="(user,index) in nowPrize.users" :title="user.nickname" @click="showUser(user)">
+										<td v-show="showRedoLotteryCheckbox" @click.stop="">
+											<input type="checkbox" v-model="user.checked">
+										</td>
+										<td class="order">{{index + 1}}</td>
+										<td class="user">
+											<div class="lottery-right-img">
+												<img :src="user.headimgurl">
+											</div>
+											<span class="nickname">{{user.nickname}}</span>
+										</td>
+										<td class="prize">
+											<span class="prize-name">{{nowPrize.prize_name}}</span>
+										</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+					<div class="lottery-reset">
+						<div>
+							<button class="lottery-reset-btn" @click="redoLottery" :disabled="Boolean(nowPrize.is_published)">{{showRedoLotteryCheckbox?'重新抽奖':'全部重抽'}}</button>
+							<button class="lottery-confirm-btn" @click="confirmLotteryResult" :disabled="Boolean(nowPrize.is_published)">确认结果</button>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<!-- 二维码容器 -->
+		<div class="qr-stage" v-show="showQrImg">
+			<div class="qr-wrapper animated bounceIn">
+				<img :src="qrImg" title="刷新二维码" @click="refreshQr">
+			</div>
+		</div>
+		<!-- 用户名单 -->
+		<div class="users-stage" v-show="showUserFilter">
+			<div class="users-wrapper animated bounceIn">
+				<div v-if="users.length" v-for="user in users" :title="user.nickname">
+					<label>
+						<img :src="user.headimgurl">
+						<div>
+							<input type="checkbox" v-model="user.is_show">
+							<span>{{user.nickname}}</span>
+						</div>
+					</label>
+				</div>
+				<div v-else class="empty">当前没有用户参与活动</div>
+			</div>
+		</div>
+		<!-- 底部工具 -->
+		<div class="bottom-tools">
+			<div class="left-tools">
+				<div class="tools-item" @click="showQrImg=!showQrImg">
+					<span>
+						<i class="fa fa-qrcode"></i>
+						二维码
+					</span>
+				</div>
+				<div class="tools-item tool-barrage-speed">
+					<div class="tool-menu" v-show="showBarrageConfig" style="transform: translateY(-107%);padding-bottom: 15px">
+						<div class="tool-form animated fadeIn">
+							<div class="tool-form-item">
+								<label>
+									<span>弹幕速度：</span>
+									<input type="range" min="1" max="100" v-model="barrageMoveSpeed" step="1">
+								</label>
+							</div>
+							<div class="tool-form-item">
+								<label>
+									<span>不透明度：</span>
+									<input type="range" min="0" max="1" v-model="barrageOpacity" step="0.1">
+								</label>
+							</div>
+							<div class="tool-form-item">
+								<label>
+									<span>弹幕开关：</span>
+									<input type="range" min="0" max="1" step="1" v-model="intShowBarrage">
+								</label>
+							</div>
+						</div>
+					</div>
+					<span @click.stop="showBarrageConfig=!showBarrageConfig">
+						<i class="fa fa-rocket"></i>
+						弹幕
+					</span>
+				</div>
+				<div class="tools-item" @click="showUserFilter=!showUserFilter">
+					<span>
+						<i class="fa fa-user"></i>
+						筛选({{validUsers.length}}/{{users.length}})
+					</span>
+				</div>
+			</div>
+			<div class="center-tools">
+				<div class="tools-item">
+					<button class="bubbly-button animate" :class="isActivityStarted?'white-btn':''" @click="toggleActivity">{{isActivityStarted?'展示二维码':'准备抽奖'}}</button>
+				</div>
+			</div>
+			<div class="right-tools">
+				<div class="tools-item">
+					<span title="获奖名单" @click="showRedoLotteryCheckbox=!showRedoLotteryCheckbox">
+						<i class="fa fa-list"></i>
+						重抽单个
+					</span>
+				</div>
+				<div class="tools-item">
+					<span @click="refreshAll">
+						<i class="fa fa-refresh"></i>
+						刷新信息
+					</span>
+				</div>
+				<div class="tools-item" @click="toggoleFullScreen">
+					<span v-if="!isFullScreen" title="全屏">
+						<i class="fa fa-arrows-alt"></i>
+						全屏
+					</span>
+					<span  v-else title="退出全屏">
+						<i class="fa fa-repeat"></i>
+						退出全屏
+					</span>
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+<script src="https://cdn.bootcss.com/vue/2.5.21/vue.min.js"></script>
+<script src="index.js"></script>
+</html>
