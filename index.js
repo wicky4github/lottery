@@ -631,19 +631,6 @@ const app = new Vue({
     alertMsg(err, forceAlert = false) {
       clearInterval(this.alertTimeout)
       if(!this.IS_OFFLINE || forceAlert) this.alertTimeout = setTimeout(() => alert(err))
-    },
-	// 碰撞检测 true 代表已经碰撞到了
-    checkBump(dom1, dom2) {
-      let l1 = parseInt(dom1.style.left.replace('px', ''))
-      let l2 = parseInt(dom2.style.left.replace('px', ''))
-      let t1 = parseInt(dom1.style.top.replace('px', ''))
-      let t2 = parseInt(dom2.style.top.replace('px', ''))
-      let w1 = dom1.offsetWidth
-      let w2 = dom2.offsetWidth
-      let h1 = dom1.offsetHeight
-      let h2 = dom2.offsetHeight
-
-      return !(l2 > l1 + w1 || l2 + w2 < l1 || t2 > t1 + h1 || t2 + h2 < t1)
     }
   }
 })
