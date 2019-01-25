@@ -180,7 +180,7 @@ const app = new Vue({
       lotteryPerTimes: 1, // 一次性抽取多少人
       isLotteryStarted: false, // 是否抽奖开始
       isFullScreen: false, // 是否全屏
-      showQrImg: true, // 是否显示二维码
+      showQrImg: false, // 是否显示二维码
       isActivityStarted: false, // 活动是否开始
       showBarrageConfig: false, // 显示弹幕配置
       intShowBarrage: 1, // 是否开启弹幕（int值）
@@ -404,6 +404,7 @@ const app = new Vue({
     toggoleLottery() {
       if (!this.users.length) {return}
       if (!this.prizes.length) {return}
+      if (parseInt(this.nowPrize.is_published)) {return}
       this.isLotteryStarted = !this.isLotteryStarted
       clearInterval(this.lotteryUserInterval)
       if (this.isLotteryStarted) {
@@ -442,6 +443,9 @@ const app = new Vue({
     // 切换全屏
     toggoleFullScreen() {
       this.isFullScreen = !this.isFullScreen
+      this.setFullScreen()
+    },
+    setFullScreen() {
       this.isFullScreen ? launchFullscreen() : exitFullscreen()
     },
     // 开始活动
@@ -504,6 +508,7 @@ const app = new Vue({
       if (confirm('确定本次抽奖结果吗？')) {
         let data = {
           prize_id: this.nowPrize.prize_id,
+
         }
         return ajax('Admin/OfficialAccount/confirm_lottery', data, 'get')
           .then(res => {
@@ -630,7 +635,10 @@ const app = new Vue({
     // 解决多个弹窗的问题
     alertMsg(err, forceAlert = false) {
       clearInterval(this.alertTimeout)
-      if(!this.IS_OFFLINE || forceAlert) this.alertTimeout = setTimeout(() => alert(err))
+      if(!this.IS_OFFLINE || forceAlert) this.alertTimeout = setTimeout(() => {
+        alert(err)
+        this.setFullScreen()
+      })
     }
   }
 })
