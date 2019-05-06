@@ -160,6 +160,7 @@ const ajax = (url = '', data = {}, method = 'get') => {
 const FORCE_ALERT = true
 let tmpPos = []
 let tmpTimes = 0
+let firstTime = true
 // 主程序
 const app = new Vue({
   el: '#app',
@@ -356,6 +357,7 @@ const app = new Vue({
         this.users.forEach((user, index) => {
           user.left -= this.barrageMoveSpeed
           if (user.left <= -this.winW) {
+            user.left = this.winW
             this.resetUserPosition(user)
           }
         })
@@ -363,6 +365,8 @@ const app = new Vue({
     },
     // 重置弹幕位置
     resetUserPosition(user = {}) {
+      user.top = getRand(0, this.winH - 200)
+      return
       if (!tmpPos.length || tmpPos.reduce((c, p) => c + p.is_occupy, 0) == tmpPos.length) {
         tmpPos = []
         tmpTimes++
@@ -450,7 +454,7 @@ const app = new Vue({
     },
     // 开始活动
     toggleActivity() {
-      this.showQrImg = this.isActivityStarted
+      // this.showQrImg = this.isActivityStarted
       this.isActivityStarted = !this.isActivityStarted
       if (this.isActivityStarted) {
       	this.showUserFilter = false
@@ -623,8 +627,10 @@ const app = new Vue({
     loadUser(user) {
       let img = new Image()
       img.onload = () => {
+        tmpTimes++
         if (!this.users.length || this.users.every(u => u.openid != user.openid)) {
           // 新增的弹幕才推入数组，不要反复重置
+          user.left = this.winW + tmpTimes * 200
           this.resetUserPosition(user)
           user.is_show = true
           this.users.push(user)

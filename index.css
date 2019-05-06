@@ -432,7 +432,7 @@ html, body {
 .lottery-stage .lottery-left .lottery-imgs {
 	width: 100%; overflow: hidden; margin-top: 15%;
 }
-@media(max-height: 640px) {
+@media(max-height: 766px) {
 	.lottery-stage .lottery-left .lottery-imgs {
 		margin-top: 6%;
 	}
