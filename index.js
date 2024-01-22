@@ -585,6 +585,8 @@ const app = new Vue({
         .then(res => {
           if (res.msg.count) {
             let activityInfo = res.msg.list[0]
+            this.background = activityInfo.bg_image
+              console.log('bbb')
             this.prizes = activityInfo.prizes || []
             this.prizes.forEach(prize => {
               prize.users.forEach(user => {
